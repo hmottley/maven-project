@@ -1,35 +1,36 @@
 pipeline {
     agent any
+	parameters {
+	    string(name: 'tomcat_dev', defaultValue: 'staging', description: 'staging server')
+	    string(name: 'tomcat_prod', defaultValue: 'prod', description: 'prod server')
+	}
+	triggers{
+	    pollSCM('* * * * *')
+	}
     stages{
         stage('Build'){
-            steps{
+            steps {
                 sh 'mvn clean package'
             }
             post {
                 success {
-                    echo 'Now archiving...'
+                    echo 'Now Archiving...'
                     archiveArtifacts artifacts: '**/target/*.war'
                 }
             }
         }
-        stage ('Deploy to staging') {
-            steps {
-                build job: 'DeployToStaging'
-            }
-        }
-        stage ('Deploy to Prod') {
-            steps {
-                timeout(time:5, unit:'DAYS') {
-                    input message:'Approve Production Deployment?'
+        stage ('Deployments'){
+            parallel{
+                stage ('Deploy to Staging'){
+                    steps {
+                        sh "cp **/target/*.war /opt/tomcat/apache-tomcat-9.0.7-$(params.tomcat_staging)/webapps/"
+                    }
                 }
-                build job: 'ProdDeploy'
-            }
-            post {
-                success {
-                    echo 'Code deployed to Production'
-                }
-                failure {
-                    echo 'Deployment Failed'
+
+                stage ("Deploy to Production"){
+                    steps {
+                        sh "cp **/target/*.war /opt/tomcat/apache-tomcat-9.0.7-$(params.tomcat_prod)/webapps/"
+                    }
                 }
             }
         }
