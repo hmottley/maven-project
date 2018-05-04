@@ -23,7 +23,7 @@ pipeline {
             parallel{
                 stage ('Deploy to Staging'){
                     steps {
-                        sh "cp **/target/*.war /opt/tomcat/apache-tomcat-9.0.7-${params.tomcat_staging}/webapps/"
+                        sh "cp **/target/*.war /opt/tomcat/apache-tomcat-9.0.7-${params.tomcat_dev}/webapps/"
                     }
                 }
 
